@@ -5,6 +5,7 @@ import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Spliterator;
 
 /**
  * <pre>
@@ -101,5 +102,81 @@ public class ArraysTest {
         System.out.println(Arrays.toString(arr2));
     }
 
+    /**
+     * 1、如果两个指定数组彼此是深层相等 的，则返回 true；
+     * 2、不支持基本数据类型数组；
+     * 3、先比较数组长度，再用==比较，==结果为false时再用equals比较；
+     * 4、Arrays为每种基本类型数组定义了一个equals方法。
+     */
+    @Test
+    public void deepEquals() {
+        Byte[] arr1 = {1};
+        Byte[] arr2 = {1, 2};
+        System.out.println(Arrays.deepEquals(arr1, arr2));
+    }
+
+    /**
+     * 1、将指定的值分配给指定数组指定范围中的每个元素；
+     * 2、指定范围时，替换不包括toIndex下标值，因此需要+1。
+     */
+    @Test
+    public void fill() {
+        byte[] arr1 = {1, 2, 3, 4};
+        // 全部范围
+        Arrays.fill(arr1, (byte) 5);
+        System.out.println(Arrays.toString(arr1));// [5, 5, 5, 5]
+        // 指定范围
+        Arrays.fill(arr1, 1, 3, (byte) 1);
+        System.out.println(Arrays.toString(arr1));// [5, 1, 5, 5]
+    }
+
+    /**
+     * 1、对数组arr进行二元迭代；
+     * 2、从头到尾逐个按照left op right的方式更新，更新后的值继续迭代下一个元素；
+     * 3、TypeBinaryOperator表示二元运算法，Type目前支持类型为：Int、Double、Long
+     */
+    @Test
+    public void parallelPrefix() {
+        int[] arr = new int[]{1, 2, 3};
+        Arrays.parallelPrefix(arr, (left, right) -> {return left * right;});
+        // left op right 数组元素
+        // 1 * 2        [1, 2, 3]
+        // 2 * 3        [1, 2, 6]
+        System.out.println(Arrays.toString(arr));// [1, 2, 6]
+    }
+
+    /**
+     * 1、使用填充算法为数组arr的每一个元素赋值；
+     * 2、默认使用元素的索引为该元素赋值；
+     * 3、可自定义如何生成赋值。
+     */
+    @Test
+    public void parallelSetAll() {
+        int[] arr = new int[]{1, 52, 3};
+        Arrays.parallelSetAll(arr, index -> {return index;});// 使用索引值
+        System.out.println(Arrays.toString(arr));// [0, 1, 2]
+        Arrays.parallelSetAll(arr, index -> {return index * 3;});// 索引值 * 3。可自定义，例如随机数等
+        System.out.println(Arrays.toString(arr));// [0, 3, 6]
+    }
+
+    /**
+     * 1、JDK1.8新增排序方法；
+     * 2、可指定数组范围排序。
+     */
+    @Test
+    public void parallelSort() {
+        int[] arr = new int[]{100, 52, 3};
+        Arrays.parallelSort(arr, 0, 2);
+        System.out.println(Arrays.toString(arr));// [52, 100, 3]
+        Arrays.parallelSort(arr);
+        System.out.println(Arrays.toString(arr));// [3, 52, 100]
+    }
+
+    @Test
+    public void spliterator() {
+        int[] arr = new int[]{100, 52, 3};
+        Spliterator.OfInt ofInt = Arrays.spliterator(arr);
+        System.out.println(ofInt.trySplit());
+    }
 
 }
