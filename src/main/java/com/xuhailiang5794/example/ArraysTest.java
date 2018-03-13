@@ -6,6 +6,9 @@ import org.junit.Test;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Spliterator;
+import java.util.function.IntConsumer;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 /**
  * <pre>
@@ -138,7 +141,9 @@ public class ArraysTest {
     @Test
     public void parallelPrefix() {
         int[] arr = new int[]{1, 2, 3};
-        Arrays.parallelPrefix(arr, (left, right) -> {return left * right;});
+        Arrays.parallelPrefix(arr, (left, right) -> {
+            return left * right;
+        });
         // left op right 数组元素
         // 1 * 2        [1, 2, 3]
         // 2 * 3        [1, 2, 6]
@@ -153,9 +158,13 @@ public class ArraysTest {
     @Test
     public void parallelSetAll() {
         int[] arr = new int[]{1, 52, 3};
-        Arrays.parallelSetAll(arr, index -> {return index;});// 使用索引值
+        Arrays.parallelSetAll(arr, index -> {
+            return index;
+        });// 使用索引值
         System.out.println(Arrays.toString(arr));// [0, 1, 2]
-        Arrays.parallelSetAll(arr, index -> {return index * 3;});// 索引值 * 3。可自定义，例如随机数等
+        Arrays.parallelSetAll(arr, index -> {
+            return index * 3;
+        });// 索引值 * 3。可自定义，例如随机数等
         System.out.println(Arrays.toString(arr));// [0, 3, 6]
     }
 
@@ -172,11 +181,96 @@ public class ArraysTest {
         System.out.println(Arrays.toString(arr));// [3, 52, 100]
     }
 
+    /**
+     * 1、获取一个分割器，可用于遍历数组；
+     * 2、可指定范围获取分割器，获取到的分割器中内容不包括endExclusive下标的元素；
+     * 3、除支持复杂类型数组遍历之外，还支持int、double、long三种基本类型数组遍历；
+     * 4、分割器持有数组的引用，并非独立的对象（即改变数组元素将影响遍历的结果）；
+     * 5、遍历过程中可以修改数组中元素的值。
+     */
     @Test
     public void spliterator() {
-        int[] arr = new int[]{100, 52, 3};
-        Spliterator.OfInt ofInt = Arrays.spliterator(arr);
-        System.out.println(ofInt.trySplit());
+        /**
+         * 全部遍历
+         */
+        Integer[] arr = new Integer[]{100, 52, 3};
+        Spliterator<Integer> spliterator = Arrays.spliterator(arr);
+        spliterator.forEachRemaining(integer -> {
+            System.out.println(integer);
+            // 输出结果
+            // 100
+            // 52
+            // 3
+        });
+
+        /**
+         * 指定范围遍历
+         */
+        spliterator = Arrays.spliterator(arr, 0, 1);
+        spliterator.forEachRemaining(integer -> {
+            System.out.println(integer);
+            // 输出结果
+            // 100
+        });
+
+        /**
+         * 改变数组中元素的值
+         */
+        spliterator = Arrays.spliterator(arr);
+        arr[0] = 99;
+        spliterator.forEachRemaining(integer -> {
+            /**
+             * “无效修改”，遍历时已经将arr中0的值取出来了，因此在这里对0的元素进行修改并不影响输出结果
+             */
+            arr[0] = 199;
+
+            // 遍历中改变数组中元素的值
+            arr[1] = 199;
+            System.out.println(integer);
+            // 输出结果
+            // 99
+            // 99
+            // 3
+        });
+
+        /**
+         * 基本数据类型遍历
+         */
+        int[] arr2 = {1, 2, 3, 4};
+        Arrays.spliterator(arr2).forEachRemaining(new IntConsumer() {
+            @Override
+            public void accept(int value) {
+                System.out.println(value);
+                // 输出结果
+                // 1
+                // 2
+                // 3
+                // 4
+            }
+        });
+    }
+
+    /**
+     * 将数组作为一个连续的流使用，用于上与spliterator相似
+     */
+    @Test
+    public void stream() {
+        int[] arr1 = {1, 2, 3, 4};
+        IntStream intStream = Arrays.stream(arr1);
+        intStream.forEach(new IntConsumer() {
+            @Override
+            public void accept(int value) {
+                System.out.println(value);
+            }
+        });
+
+        Integer[] arr2 = {1, 2, 3, 4};
+        Stream<Integer> integerStream = Arrays.stream(arr2);
+        integerStream.forEach(integer -> {
+            arr2[0] = 2;
+            System.out.println(integer);
+        });
+
     }
 
 }
